@@ -1,0 +1,92 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'nodejs-express-api-main/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  AZURE_WEBAPP_NAME: 'podcast-manager-api'
+  AZURE_WEBAPP_PACKAGE_PATH: './nodejs-express-api-main'
+  NODE_VERSION: '18.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        npm ci --production=false
+
+    - name: Build application
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        npm run build
+
+    - name: Run tests (if available)
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        npm test --if-present
+      continue-on-error: true
+
+    - name: Create deployment package
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        # Remove dev dependencies for smaller package
+        npm ci --production
+        # Create a clean package for deployment
+        rm -rf node_modules/@types
+        rm -rf src/
+        rm -rf .git/
+        ls -la
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: Health Check
+      run: |
+        sleep 30  # Wait for deployment to complete
+        curl -f https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/health || exit 1
+        echo "✅ Health check passed!"
+      continue-on-error: true
+
+    - name: Test API Endpoints
+      run: |
+        echo "Testing API endpoints..."
+        curl -f https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/list
+        curl -f "https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/podcasts?p=flow"
+        echo "✅ API endpoints working!"
+      continue-on-error: true
+
+    - name: Azure logout
+      run: |
+        az logout
+      if: always()

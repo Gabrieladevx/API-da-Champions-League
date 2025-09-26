@@ -4,6 +4,7 @@ import {
   getListEpisodes,
   getFilterEpisodes,
 } from "./controllers/podscasts-controller";
+import { getHealth } from "./controllers/health-controller";
 
 import { Routes } from "./routes/routes";
 import { HttpMethod } from "./utils/http-methods";
@@ -21,6 +22,11 @@ export const app = async (
 
   if (request.method === HttpMethod.GET && baseUrl === Routes.ESPISODE) {
     await getFilterEpisodes(request, response);
+    return;
+  }
+
+  if (request.method === HttpMethod.GET && baseUrl === Routes.HEALTH) {
+    await getHealth(request, response);
     return;
   }
 

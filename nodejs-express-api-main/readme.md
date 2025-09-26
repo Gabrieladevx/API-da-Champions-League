@@ -54,10 +54,30 @@ O Podcast Manager é uma aplicação inspirada no estilo da Netflix, que permite
 
 ## Como Utilizar
 
+### Desenvolvimento Local
 1. Clone este repositório.
 2. Instale as dependências usando `npm install`.
-3. Inicie o servidor executando `start:dev`.
+3. Inicie o servidor executando `npm run start:dev`.
 4. Acesse os endpoints fornecidos para listar os episódios de podcasts ou filtrá-los por nome de podcast.
+
+### Deploy para Azure
+
+#### Opção 1: Deploy Automático via GitHub Actions
+1. Configure os secrets do GitHub:
+   - `AZURE_WEBAPP_PUBLISH_PROFILE`: Perfil de publicação do Azure App Service
+2. Faça push para a branch `main` - o deploy será executado automaticamente
+
+#### Opção 2: Deploy Manual
+1. Instale o [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
+2. Faça login: `az login`
+3. Execute o script de deploy: `./deploy.sh`
+4. Siga as instruções na tela
+
+O script irá:
+- Criar um Resource Group no Azure
+- Provisionar a infraestrutura usando Bicep (App Service, Application Insights, Log Analytics)
+- Fazer build da aplicação
+- Fazer deploy para o Azure App Service
 
 ## Contribuição
 

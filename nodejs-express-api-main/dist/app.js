@@ -127,6 +127,26 @@ var getFilterEpisodes = (req, res) => __async(void 0, null, function* () {
   res.end();
 });
 
+// src/controllers/health-controller.ts
+var defaultContent2 = { "Content-Type": "application/json" /* JSON */ };
+var getHealth = (req, res) => __async(void 0, null, function* () {
+  const healthInfo = {
+    status: "healthy",
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    uptime: process.uptime(),
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      port: process.env.PORT || "3333",
+      host: process.env.HOST || "127.0.0.1"
+    }
+  };
+  res.writeHead(200, defaultContent2);
+  res.write(JSON.stringify(healthInfo, null, 2));
+  res.end();
+});
+
 // src/app.ts
 var app = (request, response) => __async(void 0, null, function* () {
   var _a;
@@ -137,6 +157,10 @@ var app = (request, response) => __async(void 0, null, function* () {
   }
   if (request.method === "GET" /* GET */ && baseUrl === "/api/podcasts" /* ESPISODE */) {
     yield getFilterEpisodes(request, response);
+    return;
+  }
+  if (request.method === "GET" /* GET */ && baseUrl === "/health" /* HEALTH */) {
+    yield getHealth(request, response);
     return;
   }
   response.statusCode = 404;
