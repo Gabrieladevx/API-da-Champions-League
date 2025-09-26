@@ -26,6 +26,7 @@ module.exports = __toCommonJS(routes_exports);
 var Routes = /* @__PURE__ */ ((Routes2) => {
   Routes2["LIST"] = "/api/list";
   Routes2["ESPISODE"] = "/api/podcasts";
+  Routes2["HEALTH"] = "/health";
   return Routes2;
 })(Routes || {});
 // Annotate the CommonJS export names for ESM import in node:
